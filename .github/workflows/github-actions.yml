@@ -1,3 +1,4 @@
+
 name: assignment-test
 
 on:
@@ -26,11 +27,12 @@ jobs:
           - name: Configure GitHub SSH host key
             shell: bash
             run: |
-              mkdir -p ~/.ssh
-              chmod 700 ~/.ssh
-              ssh-keygen -f ~/.ssh/known_hosts -R github.com || true
-              printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' >> ~/.ssh/known_hosts
-              chmod 600 ~/.ssh/known_hosts
+              mkdir -p /root/.ssh
+              chmod 700 /root/.ssh
+              touch /root/.ssh/known_hosts
+              ssh-keygen -f /root/.ssh/known_hosts -R github.com || true
+              printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' >> /root/.ssh/known_hosts
+              chmod 600 /root/.ssh/known_hosts
 
           - name: Test SSH authentication
             env:
