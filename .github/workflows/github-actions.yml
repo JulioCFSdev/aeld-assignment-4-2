@@ -1,27 +1,48 @@
 name: assignment-test
+
 on:
     push:
         tags-ignore:
             - '*'
         branches:
             - '*'
+
 jobs:
     full-test:
         container: cuaesd/aesd-autotest:24-assignment4-buildroot
         runs-on: self-hosted
         timeout-minutes: 120
+
         steps:
           - uses: actions/checkout@v2
+
           - name: Checkout submodules
             run: git submodule update --init --recursive
+
           - uses: webfactory/ssh-agent@v0.5.3
             with:
                 ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+          - name: Configure GitHub SSH host key
+            shell: bash
+            run: |
+              mkdir -p ~/.ssh
+              chmod 700 ~/.ssh
+              ssh-keygen -f ~/.ssh/known_hosts -R github.com || true
+              printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' >> ~/.ssh/known_hosts
+              chmod 600 ~/.ssh/known_hosts
+
+          - name: Test SSH authentication
+            env:
+              GIT_SSH_COMMAND: "ssh -o BatchMode=yes"
+            run: ssh -T git@github.com || test "$?" -eq 1
+
           - name: Run full test
             env:
-              GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
+              GIT_SSH_COMMAND: "ssh -o BatchMode=yes"
             run: ./full-test.sh
+
           - name: Cleanup
             if: always()
-            run: |
-              ssh-add -D
+            run: ssh-add -D || true
+
